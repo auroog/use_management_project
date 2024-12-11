@@ -18,6 +18,7 @@ from builtins import Exception, range, str
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
+import asyncio
 
 # Third-party imports
 import pytest
@@ -37,6 +38,18 @@ from app.utils.template_manager import TemplateManager
 from app.services.email_service import EmailService
 from app.services.jwt_service import create_access_token
 
+# Global Pytest Fixtures Section
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create a session-scoped event loop."""
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
+
+@pytest.fixture(autouse=True)
+def mock_database_initialize():
+    Database.initialize = AsyncMock()
+
 fake = Faker()
 
 settings = get_settings()
@@ -45,19 +58,22 @@ engine = create_async_engine(TEST_DATABASE_URL, echo=settings.debug)
 AsyncTestingSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 AsyncSessionScoped = scoped_session(AsyncTestingSessionLocal)
 
-
 @pytest.fixture
 def email_service():
-    # Assuming the TemplateManager does not need any arguments for initialization
-    template_manager = TemplateManager()
-    email_service = EmailService(template_manager=template_manager)
-    return email_service
-
+    if settings.send_real_mail == 'true':
+        # Return the real email service when specifically testing email functionality
+        return EmailService()
+    else:
+        # Otherwise, use a mock to prevent actual email sending
+        mock_service = AsyncMock(spec=EmailService)
+        mock_service.send_verification_email.return_value = None
+        mock_service.send_user_email.return_value = None
+        return mock_service
 
 # this is what creates the http client for your api tests
 @pytest.fixture(scope="function")
 async def async_client(db_session):
-    async with AsyncClient(app=app, base_url="http://testserver") as client:
+    async with AsyncClient(app=app, base_url="http://use_management_project-fastapi-1:8000") as client:
         app.dependency_overrides[get_db] = lambda: db_session
         try:
             yield client
@@ -65,25 +81,31 @@ async def async_client(db_session):
             app.dependency_overrides.clear()
 
 @pytest.fixture(scope="session", autouse=True)
-def initialize_database():
+async def initialize_database():
+    """Initialize the database connection once per session."""
+    if not settings.database_url:
+        pytest.fail("Database URL is not configured.")
     try:
-        Database.initialize(settings.database_url)
+        await Database.initialize(settings.database_url)
     except Exception as e:
         pytest.fail(f"Failed to initialize the database: {str(e)}")
 
 # this function setup and tears down (drops tales) for each test function, so you have a clean database for each test.
 @pytest.fixture(scope="function", autouse=True)
 async def setup_database():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-    async with engine.begin() as conn:
-        # you can comment out this line during development if you are debugging a single test
-         await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
+    """Setup and teardown database tables for each test."""
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        yield
+    finally:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+        await engine.dispose()
 
 @pytest.fixture(scope="function")
 async def db_session(setup_database):
+    """Provide a database session for each test."""
     async with AsyncSessionScoped() as session:
         try:
             yield session
@@ -214,6 +236,8 @@ async def manager_user(db_session: AsyncSession):
 @pytest.fixture(scope="function")
 def admin_token(admin_user):
     # Assuming admin_user has an 'id' and 'role' attribute
+    if not admin_user.id or not admin_user.role:
+        pytest.fail("Admin user must have a valid ID and role.")
     token_data = {"sub": str(admin_user.id), "role": admin_user.role.name}
     return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
 
@@ -226,15 +250,3 @@ def manager_token(manager_user):
 def user_token(user):
     token_data = {"sub": str(user.id), "role": user.role.name}
     return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
-
-@pytest.fixture
-def email_service():
-    if settings.send_real_mail == 'true':
-        # Return the real email service when specifically testing email functionality
-        return EmailService()
-    else:
-        # Otherwise, use a mock to prevent actual email sending
-        mock_service = AsyncMock(spec=EmailService)
-        mock_service.send_verification_email.return_value = None
-        mock_service.send_user_email.return_value = None
-        return mock_service

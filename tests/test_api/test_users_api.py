@@ -1,15 +1,32 @@
 from builtins import str
 import pytest
+import requests
 from httpx import AsyncClient
+from unittest.mock import Mock
 from app.main import app
 from app.models.user_model import User, UserRole
 from app.utils.nickname_gen import generate_nickname
 from app.utils.security import hash_password
 from app.services.jwt_service import decode_token  # Import your FastAPI app
 
+class MockResponse:
+    def __init__(self, json_data=None, status_code=200):
+        self.json_data = json_data or {"success": True}
+        self.status_code = status_code
+    def json(self):
+        return self.json_data
+
+@pytest.fixture
+def mock_api_request(mocker):
+    mocker.patch.object(requests, "get", return_value=MockResponse())
+    mocker.patch.object(requests, "post", return_value=MockResponse())
+    mocker.patch.object(requests, "put", return_value=MockResponse())
+    mocker.patch.object(requests, "delete", return_value=MockResponse())
+
+
 # Example of a test function using the async_client fixture
 @pytest.mark.asyncio
-async def test_create_user_access_denied(async_client, user_token, email_service):
+async def test_create_user_access_denied(async_client, user_token, email_service, mock_api_request):
     headers = {"Authorization": f"Bearer {user_token}"}
     # Define user data for the test
     user_data = {

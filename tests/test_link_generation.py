@@ -49,3 +49,10 @@ def test_generate_pagination_links(mock_request):
     assert len(links) >= 4
     expected_self_url = "http://testserver/users?limit=5&skip=10"
     assert normalize_url(str(links[0].href)) == normalize_url(expected_self_url), "Self link should match expected URL"
+
+def test_edge_case_query_params():
+    # Test edge cases with query string ordering, repeated keys
+    url = "http://testserver/users?b=2&a=1&b=3"
+    normalized = normalize_url(url)
+    expected_url = "http://testserver/users?a=1&b=2&b=3"
+    assert normalized == expected_url

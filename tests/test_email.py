@@ -1,8 +1,20 @@
 import pytest
+from unittest.mock import AsyncMock, Mock
 from app.services.email_service import EmailService
 from app.utils.template_manager import TemplateManager
 
-    
+@pytest.fixture
+def mock_template_manager():
+    """Mock TemplateManager."""
+    return Mock(spec=TemplateManager)
+
+@pytest.fixture
+def email_service(mock_template_manager):
+    """Mock EmailService."""
+    service = EmailService(template_manager=mock_template_manager)
+    service.send_user_email = AsyncMock()
+    return service
+
 @pytest.mark.asyncio
 async def test_send_markdown_email(email_service):
     user_data = {
@@ -12,3 +24,4 @@ async def test_send_markdown_email(email_service):
     }
     await email_service.send_user_email(user_data, 'email_verification')
     # Manual verification in Mailtrap
+    email_service.send_user_email.assert_awaited_once_with(user_data, 'email_verification')

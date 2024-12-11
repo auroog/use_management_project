@@ -31,7 +31,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     settings = get_settings()
-    Database.initialize(settings.database_url, settings.debug)
+    await Database.initialize(settings.database_url, settings.debug)
 
 @app.exception_handler(Exception)
 async def exception_handler(request, exc):

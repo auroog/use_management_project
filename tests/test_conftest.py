@@ -2,11 +2,19 @@
 
 from builtins import len
 import pytest
+from unittest.mock import patch
 from httpx import AsyncClient
 from sqlalchemy.future import select
-
 from app.models.user_model import User, UserRole
 from app.utils.security import verify_password
+
+@pytest.fixture(scope="function")
+async def db_session(session):
+    """Setup and teardown database session to ensure test isolation."""
+    async with session() as db:
+        await db.begin()
+        yield db
+        await db.rollback()
 
 @pytest.mark.asyncio
 async def test_user_creation(db_session, verified_user):

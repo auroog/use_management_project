@@ -14,7 +14,7 @@ async def test_user_role(db_session: AsyncSession, user: User, admin_user: User,
     assert manager_user.role == UserRole.MANAGER, "Pro role should be correctly assigned"
 
 @pytest.mark.asyncio
-async def test_has_role(user: User, admin_user: User, manager_user: User):
+async def test_has_role(user, admin_user, manager_user):
     """
     Tests the has_role method to ensure it accurately checks the user's role.
     """
@@ -24,14 +24,14 @@ async def test_has_role(user: User, admin_user: User, manager_user: User):
     assert manager_user.has_role(UserRole.MANAGER), "Pro user should have PRO role"
 
 @pytest.mark.asyncio
-async def test_user_repr(user: User):
+async def test_user_repr(user):
     """
     Tests the __repr__ method for accurate representation of the User object.
     """
     assert repr(user) == f"<User {user.nickname}, Role: {user.role.name}>", "__repr__ should include nickname and role"
 
 @pytest.mark.asyncio
-async def test_failed_login_attempts_increment(db_session: AsyncSession, user: User):
+async def test_failed_login_attempts_increment(db_session: AsyncSession, user):
     """
     Tests that failed login attempts can be incremented and persisted correctly.
     """
@@ -42,7 +42,7 @@ async def test_failed_login_attempts_increment(db_session: AsyncSession, user: U
     assert user.failed_login_attempts == initial_attempts + 1, "Failed login attempts should increment"
 
 @pytest.mark.asyncio
-async def test_last_login_update(db_session: AsyncSession, user: User):
+async def test_last_login_update(db_session: AsyncSession, user):
     """
     Tests updating the last login timestamp.
     """
@@ -53,7 +53,7 @@ async def test_last_login_update(db_session: AsyncSession, user: User):
     assert user.last_login_at == new_last_login, "Last login timestamp should update correctly"
 
 @pytest.mark.asyncio
-async def test_account_lock_and_unlock(db_session: AsyncSession, user: User):
+async def test_account_lock_and_unlock(db_session: AsyncSession, user):
     """
     Tests locking and unlocking the user account.
     """
@@ -73,7 +73,7 @@ async def test_account_lock_and_unlock(db_session: AsyncSession, user: User):
     assert not user.is_locked, "Account should be unlocked after calling unlock_account()"
 
 @pytest.mark.asyncio
-async def test_email_verification(db_session: AsyncSession, user: User):
+async def test_email_verification(db_session: AsyncSession, user):
     """
     Tests the email verification functionality.
     """
@@ -87,7 +87,7 @@ async def test_email_verification(db_session: AsyncSession, user: User):
     assert user.email_verified, "Email should be verified after calling verify_email()"
 
 @pytest.mark.asyncio
-async def test_user_profile_pic_url_update(db_session: AsyncSession, user: User):
+async def test_user_profile_pic_url_update(db_session: AsyncSession, user):
     """
     Tests the profile pic update functionality.
     """
@@ -101,7 +101,7 @@ async def test_user_profile_pic_url_update(db_session: AsyncSession, user: User)
     assert user.profile_picture_url == profile_pic_url, "The profile pic did not update"
 
 @pytest.mark.asyncio
-async def test_user_linkedin_url_update(db_session: AsyncSession, user: User):
+async def test_user_linkedin_url_update(db_session: AsyncSession, user):
     """
     Tests the profile pic update functionality.
     """
@@ -116,7 +116,7 @@ async def test_user_linkedin_url_update(db_session: AsyncSession, user: User):
 
 
 @pytest.mark.asyncio
-async def test_user_github_url_update(db_session: AsyncSession, user: User):
+async def test_user_github_url_update(db_session: AsyncSession, user):
     """
     Tests the profile pic update functionality.
     """
@@ -131,7 +131,7 @@ async def test_user_github_url_update(db_session: AsyncSession, user: User):
 
 
 @pytest.mark.asyncio
-async def test_update_user_role(db_session: AsyncSession, user: User):
+async def test_update_user_role(db_session: AsyncSession, user):
     """
     Tests updating the user's role and ensuring it persists correctly.
     """

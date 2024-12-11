@@ -1,3 +1,4 @@
+import os
 from builtins import bool, int, str
 from pathlib import Path
 from pydantic import  Field, AnyUrl, DirectoryPath
@@ -21,8 +22,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 15  # 15 minutes for access token
     refresh_token_expire_minutes: int = 1440  # 24 hours for refresh token
     # Database configuration
-    database_url: str = Field(default='postgresql+asyncpg://user:password@postgres/myappdb', description="URL for connecting to the database")
-
+    database_url: str = "postgresql://user:password@use_management_project-postgres-1:5432/dbname"
     # Optional: If preferring to construct the SQLAlchemy database URL from components
     postgres_user: str = Field(default='user', description="PostgreSQL username")
     postgres_password: str = Field(default='password', description="PostgreSQL password")
@@ -36,16 +36,15 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(default='NONE', description="Open AI Api Key")
     send_real_mail: bool = Field(default=False, description="use mock")
     # Email settings for Mailtrap
-    smtp_server: str = Field(default='smtp.mailtrap.io', description="SMTP server for sending emails")
-    smtp_port: int = Field(default=2525, description="SMTP port for sending emails")
-    smtp_username: str = Field(default='your-mailtrap-username', description="Username for SMTP server")
-    smtp_password: str = Field(default='your-mailtrap-password', description="Password for SMTP server")
-
+    smtp_server: str = Field(default=os.getenv("SMTP_SERVER", 'smtp.mailtrap.io'))
+    smtp_port: int = Field(default=int(os.getenv("SMTP_PORT", 2525)))
+    smtp_username: str = Field(default=os.getenv("SMTP_USERNAME", ''))
+    smtp_password: str = Field(default=os.getenv("SMTP_PASSWORD", ''))
 
     class Config:
         # If your .env file is not in the root directory, adjust the path accordingly.
         env_file = ".env"
         env_file_encoding = 'utf-8'
-
+        extra = "allow"
 # Instantiate settings to be imported in your application
 settings = Settings()
