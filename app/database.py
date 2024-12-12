@@ -1,5 +1,9 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
+
+load_dotenv()
 
 Base = declarative_base()
 
@@ -12,7 +16,7 @@ class Database:
     async def initialize(cls, database_url: str, echo: bool = False):
         """Initialize the async engine and sessionmaker."""
         if cls._engine is None:  # Ensure engine is created once
-            cls._engine = create_async_engine(database_url, echo=echo, future=True)
+            cls._engine = create_async_engine(database_url, echo=True, future=True)
             cls._session_factory = sessionmaker(
                 bind=cls._engine, class_=AsyncSession, expire_on_commit=False, future=True
             )

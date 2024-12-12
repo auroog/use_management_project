@@ -25,7 +25,6 @@ async def get_db() -> AsyncSession:
             yield session
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 

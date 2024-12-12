@@ -47,7 +47,7 @@ jobs:
 
       - name: Run tests with Pytest
         env:
-            DATABASE_URL = "postgresql://user:password@use_management_project-postgres-1:5432/dbname"
+            DATABASE_URL = "postgresql+asyncpg://user:password@myappdb:5432/myappdb"
         run: pytest
 
   build-and-push-docker:

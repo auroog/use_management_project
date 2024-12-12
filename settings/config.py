@@ -3,6 +3,7 @@ from builtins import bool, int, str
 from pathlib import Path
 from pydantic import  Field, AnyUrl, DirectoryPath
 from pydantic_settings import BaseSettings
+from typing import ClassVar
 
 class Settings(BaseSettings):
     max_login_attempts: int = Field(default=3, description="Background color of QR codes")
@@ -22,11 +23,11 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 15  # 15 minutes for access token
     refresh_token_expire_minutes: int = 1440  # 24 hours for refresh token
     # Database configuration
-    database_url: str = "postgresql://user:password@use_management_project-postgres-1:5432/dbname"
+    DATABASE_URL: ClassVar[str] = 'postgresql+asyncpg://user:password@postgres:5432/myappdb'
     # Optional: If preferring to construct the SQLAlchemy database URL from components
     postgres_user: str = Field(default='user', description="PostgreSQL username")
     postgres_password: str = Field(default='password', description="PostgreSQL password")
-    postgres_server: str = Field(default='localhost', description="PostgreSQL server address")
+    postgres_server: str = Field(default='myappdb', description="PostgreSQL server address")
     postgres_port: str = Field(default='5432', description="PostgreSQL port")
     postgres_db: str = Field(default='myappdb', description="PostgreSQL database name")
     # Discord configuration

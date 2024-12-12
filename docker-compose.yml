@@ -30,6 +30,7 @@ services:
 
   fastapi:
     build: .
+    container_name: use_management_project-fastapi-1
     volumes:
       - .:/myapp
     working_dir: /myapp
@@ -37,9 +38,10 @@ services:
     command: [ "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     depends_on:
       - postgres
+    ports:
+      - "8000:8000"
     networks:
       - app-network
-
   nginx:
     image: nginx:latest
     ports:
