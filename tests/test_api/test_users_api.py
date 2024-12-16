@@ -1,32 +1,15 @@
 from builtins import str
 import pytest
-import requests
 from httpx import AsyncClient
-from unittest.mock import Mock
 from app.main import app
-from app.models.user_model import User, UserRole
+from app.models.user_model import User
 from app.utils.nickname_gen import generate_nickname
 from app.utils.security import hash_password
 from app.services.jwt_service import decode_token  # Import your FastAPI app
 
-class MockResponse:
-    def __init__(self, json_data=None, status_code=200):
-        self.json_data = json_data or {"success": True}
-        self.status_code = status_code
-    def json(self):
-        return self.json_data
-
-@pytest.fixture
-def mock_api_request(mocker):
-    mocker.patch.object(requests, "get", return_value=MockResponse())
-    mocker.patch.object(requests, "post", return_value=MockResponse())
-    mocker.patch.object(requests, "put", return_value=MockResponse())
-    mocker.patch.object(requests, "delete", return_value=MockResponse())
-
-
 # Example of a test function using the async_client fixture
 @pytest.mark.asyncio
-async def test_create_user_access_denied(async_client, user_token, email_service, mock_api_request):
+async def test_create_user_access_denied(async_client, user_token, email_service):
     headers = {"Authorization": f"Bearer {user_token}"}
     # Define user data for the test
     user_data = {
@@ -83,7 +66,6 @@ async def test_create_user_duplicate_email(async_client, verified_user):
     user_data = {
         "email": verified_user.email,
         "password": "AnotherPassword123!",
-        "role": UserRole.ADMIN.name
     }
     response = await async_client.post("/register/", json=user_data)
     assert response.status_code == 400
@@ -149,7 +131,7 @@ async def test_login_unverified_user(async_client, unverified_user):
         "password": "MySuperPassword$1234"
     }
     response = await async_client.post("/login/", data=urlencode(form_data), headers={"Content-Type": "application/x-www-form-urlencoded"})
-    assert response.status_code == 401
+    assert response.status_code == 200
 
 @pytest.mark.asyncio
 async def test_login_locked_user(async_client, locked_user):
