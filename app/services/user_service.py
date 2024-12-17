@@ -168,12 +168,20 @@ class UserService:
     async def verify_email_with_token(cls, session: AsyncSession, user_id: UUID, token: str) -> bool:
         user = await cls.get_by_id(session, user_id)
         if user and user.verification_token == token:
+            # Handle expiration logic
+            if user.verification_token_expiry and user.verification_token_expiry < datetime.utcnow():
+                # Token has expired
+                return False
+
+            # Clear token and mark email as verified
             user.email_verified = True
-            user.verification_token = None  # Clear the token once used
+            user.verification_token = None
+            user.verification_token_expiry = None  # Clear expired token
             user.role = UserRole.AUTHENTICATED
             session.add(user)
             await session.commit()
             return True
+
         return False
 
     @classmethod
