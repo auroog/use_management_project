@@ -1,3 +1,4 @@
+from unittest.mock import AsyncMock
 from builtins import range
 import pytest
 from sqlalchemy import select
@@ -7,6 +8,12 @@ from app.services.user_service import UserService
 from app.utils.nickname_gen import generate_nickname
 
 pytestmark = pytest.mark.asyncio
+
+# Mock SMTP Client
+class MockSMTPClient:
+    async def send_email(self, email_address: str, subject: str, body: str):
+        # Simulate a successful email send
+        return True 
 
 # Test creating a user with valid data
 async def test_create_user_with_valid_data(db_session, email_service):
@@ -149,10 +156,16 @@ async def test_reset_password(db_session, user):
 
 # Test verifying a user's email
 async def test_verify_email_with_token(db_session, user):
-    token = "valid_token_example"  # This should be set in your user setup if it depends on a real token
-    user.verification_token = token  # Simulating setting the token in the database
+    token = "valid_token_example"  # Token for testing
+    print(f"Setting token '{token}' on user email {user.email}")  # Log
+    user.verification_token = token
     await db_session.commit()
-    result = await UserService.verify_email_with_token(db_session, user.id, token)
+
+    # Log user details before querying
+    print(f"User before verify: {user}")
+    result = await UserService.verify_email_with_token(db_session, user.email, token)
+
+    print(f"Result of verify_email_with_token: {result}")
     assert result is True
 
 # Test unlocking a user's account

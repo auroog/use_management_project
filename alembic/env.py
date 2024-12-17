@@ -1,8 +1,9 @@
-from logging.config import fileConfig
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncEngine
+import asyncio
 from alembic import context
-from app.models.user_model import Base  # adjust "myapp.models" to the actual location of your Base
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.engine import Connection
+from sqlalchemy import pool
 
 
 # Alembic Config object provides access to values from the .ini file
@@ -67,3 +68,20 @@ if context.is_offline_mode():
 else:
     import asyncio
     asyncio.run(run_migrations_online())
+=======
+# Replace with your actual database URL
+config = context.config
+target_metadata = None  # Import your metadata if needed
+
+async def run_migrations_online():
+    connectable = create_async_engine(config.get_main_option("sqlalchemy.url"), poolclass=pool.NullPool)
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
+
+def do_run_migrations(connection: Connection):
+    context.configure(connection=connection, target_metadata=target_metadata)
+    with context.begin_transaction():
+        context.run_migrations()
+
+asyncio.run(run_migrations_online())
+
