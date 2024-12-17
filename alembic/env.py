@@ -5,54 +5,65 @@ from alembic import context
 from app.models.user_model import Base  # adjust "myapp.models" to the actual location of your Base
 
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# Alembic Config object provides access to values from the .ini file
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
-if config.config_file_name is not None:
+# Configure logging if a configuration file is provided
+if config.config_file_name:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
+# Use your model's MetaData object for autogenerate support
 target_metadata = Base.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 async def run_migrations_online():
-    """Run migrations in 'online' mode with async connection."""
-    # Fetch database URL from your Alembic configuration
+    """
+    Handle running migrations in 'online' mode with asynchronous database connections.
+    """
+    # Fetch database URL from the Alembic configuration
     database_url = config.get_main_option("sqlalchemy.url")
-    # Create the async engine
+    
+    # Ensure database URL exists to avoid unexpected failures
+    if not database_url:
+        raise ValueError("Database URL not defined in Alembic configuration.")
+    
+    # Create the asynchronous database engine
     async_engine: AsyncEngine = create_async_engine(database_url)
 
     async with async_engine.begin() as connection:
-        # Configure Alembic context with the connection
+        # Configure Alembic context with the connection and metadata
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
         )
 
         # Run migrations
         await context.run_migrations()
 
 
-# Handle migration modes
-if context.is_offline_mode():
+def run_migrations_offline():
+    """
+    Handle running migrations in offline mode without establishing async connections.
+    """
+    # Fetch database URL
     url = config.get_main_option("sqlalchemy.url")
+    
+    # Configure context in offline mode
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
+
+    # Run the migrations in an offline transaction
     with context.begin_transaction():
         context.run_migrations()
+
+
+# Determine mode (offline or online) and execute the respective migration logic
+if context.is_offline_mode():
+    run_migrations_offline()
 else:
     import asyncio
     asyncio.run(run_migrations_online())
