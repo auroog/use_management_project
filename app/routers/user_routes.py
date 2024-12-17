@@ -147,8 +147,7 @@ async def create_user(user: UserCreate, request: Request, db: AsyncSession = Dep
     created_user = await UserService.create(db, user.model_dump(), email_service)
     if not created_user:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create user")
-    
-    
+ 
     return UserResponse.model_construct(
         id=created_user.id,
         bio=created_user.bio,
@@ -220,10 +219,29 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Async
 async def verify_email(user_id: UUID, token: str, db: AsyncSession = Depends(get_db), email_service: EmailService = Depends(get_email_service)):
     """
     Verify user's email with a provided token.
-    
+
     - **user_id**: UUID of the user to verify.
     - **token**: Verification token sent to the user's email.
+
+    Responses:
+    - **200 OK**: {"message": "Email verified successfully"}
+    - **400 Bad Request**: {"detail": "Invalid or expired verification token"}
+    - **409 Conflict**: {"detail": "Email is already verified"}
     """
-    if await UserService.verify_email_with_token(db, user_id, token):
-        return {"message": "Email verified successfully"}
-    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired verification token")
+
+    result = await UserService.verify_email_with_token(db, user_id, token)
+
+    if result == "already_verified":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email is already verified."
+        )
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token."
+        )
+
+    return {"message": "Email verified successfully"}
+
