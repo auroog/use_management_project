@@ -49,7 +49,7 @@ services:
     depends_on:
       - fastapi
     networks:
-      - app-network
+          - app-network
 
 volumes:
   postgres-data:
