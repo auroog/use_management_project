@@ -245,3 +245,24 @@ async def verify_email(user_id: UUID, token: str, db: AsyncSession = Depends(get
 
     return {"message": "Email verified successfully"}
 
+@router.post("/resend-verification-email/{user_id}", status_code=status.HTTP_200_OK, name="resend_verification_email", tags=["Login and Registration"])
+async def resend_verification_email(user_id: UUID, db: AsyncSession = Depends(get_db), email_service: EmailService = Depends(get_email_service)):
+    """
+    Resend the verification email to the user.
+
+    - **user_id**: UUID of the user to resend the email.
+    """
+    # Fetch user details from the database
+    user = await UserService.get_user_by_id(db, user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if user.is_email_verified:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User's email is already verified")
+
+    try:
+        # Resend verification email
+        await email_service.send_verification_email(user)
+        return {"message": "Verification email resent successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to resend verification email: {str(e)}")
