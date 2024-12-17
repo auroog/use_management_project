@@ -58,6 +58,7 @@ class User(Base):
     email: Mapped[str] = Column(String(255), unique=True, nullable=False, index=True)
 
     hashed_password: Mapped[str] = mapped_column(String(225), nullable=False)
+    failed_attempts = mapped_column(Integer, default=0)
     first_name: Mapped[str] = mapped_column(String(100), nullable=True)
     last_name: Mapped[str] = mapped_column(String(100), nullable=True)
     bio: Mapped[str] = mapped_column(String(500), nullable=True)
