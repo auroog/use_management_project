@@ -54,8 +54,9 @@ class User(Base):
     __mapper_args__ = {"eager_defaults": True}
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    nickname: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    nickname: Mapped[str] = Column(String(50), unique=True, nullable=False, index=True)
     email: Mapped[str] = Column(String(255), unique=True, nullable=False, index=True)
+
     hashed_password: Mapped[str] = mapped_column(String(225), nullable=False)
     failed_attempts = mapped_column(Integer, default=0)
     first_name: Mapped[str] = mapped_column(String(100), nullable=True)
@@ -77,30 +78,29 @@ class User(Base):
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
+
     def __repr__(self) -> str:
         """Provides a readable representation of a user object."""
         return f"<User {self.nickname}, Role: {self.role.name}>"
-#Lock or unlock a user account
+
     def lock_account(self):
-        """Locks the user account."""
         self.is_locked = True
 
     def unlock_account(self):
-        """Unlocks the user account."""
         self.is_locked = False
 
-#Email verification
     def verify_email(self):
-        """Marks the user's email as verified."""
         self.email_verified = True
 
-#Role Validation
     def has_role(self, role_name: UserRole) -> bool:
-        """Checks if user has a specific role."""
         return self.role == role_name
 
 #Update professional status
     def update_professional_status(self, status: bool):
         """Updates the last login timestamp."""
+=======
+    def update_professional_status(self, status: bool):
+        """Updates the professional status and logs the update time."""
+
         self.is_professional = status
         self.professional_status_updated_at = func.now()
