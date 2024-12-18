@@ -5,8 +5,11 @@ from app.utils.template_manager import TemplateManager
 
 @pytest.fixture
 def mock_template_manager():
-    """Mock TemplateManager."""
-    return Mock(spec=TemplateManager)
+    """Mock TemplateManager with necessary mocked methods."""
+    mock_manager = Mock(spec=TemplateManager)
+    mock_manager.render_template = Mock(return_value="fake_html_content")
+    return mock_manager
+
 
 @pytest.fixture
 def email_service(mock_template_manager):
