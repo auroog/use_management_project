@@ -100,7 +100,7 @@ class User(Base):
         return self.role == role_name
 
 #Update professional status
-    def update_professional_status(self):
+    def update_professional_status(self, status: bool):
         """Updates the last login timestamp."""
         self.is_professional = status
         self.professional_status_updated_at = func.now()

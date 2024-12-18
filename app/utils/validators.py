@@ -12,10 +12,9 @@ def validate_email_address(email: str) -> bool:
         bool: True if the email is valid, otherwise False.
     """
     try:
-        # Validate and get info
+        print("Testing email:", email)  # Log the input email
         validate_email(email)
         return True
     except EmailNotValidError as e:
-        # Email not valid, return False
-        print(f"Invalid email: {e}")
+        print("Validation failed:", e)
         return False

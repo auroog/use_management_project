@@ -4,17 +4,32 @@ from builtins import len
 import pytest
 from unittest.mock import patch
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from app.models.user_model import User, UserRole
 from app.utils.security import verify_password
 
+# Database connection URL - replace with your actual credentials
+DATABASE_URL = "postgresql+asyncpg://user:password@postgres:5432/myappdb"
+
+# Create async database engine
+engine = create_async_engine(DATABASE_URL, echo=True)
+
+# Create async sessionmaker
+async_session_factory = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
 @pytest.fixture(scope="function")
-async def db_session(session):
-    """Setup and teardown database session to ensure test isolation."""
-    async with session() as db:
-        await db.begin()
-        yield db
-        await db.rollback()
+async def db_session():
+    """Fixture to provide a database session for testing."""
+    async with async_session_factory() as session:
+        await session.begin()  # Begin a transaction for isolation
+        yield session  # Make session available to the test
+        await session.rollback()
 
 @pytest.mark.asyncio
 async def test_user_creation(db_session, verified_user):
@@ -68,5 +83,5 @@ async def test_update_professional_status(db_session, verified_user):
     await db_session.commit()
     result = await db_session.execute(select(User).filter_by(email=verified_user.email))
     updated_user = result.scalars().first()
-    assert updated_user.is_professional
+    assert updated_user.is_professional is True
     assert updated_user.professional_status_updated_at is not None
